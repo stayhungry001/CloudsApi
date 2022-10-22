@@ -6,6 +6,9 @@ from aliyunsdkslb.request.v20140515.DescribeLoadBalancersRequest import Describe
 from aliyunsdkslb.request.v20140515.DescribeLoadBalancerListenersRequest import DescribeLoadBalancerListenersRequest
 from aliyunsdkslb.request.v20140515.DescribeAccessControlListsRequest import DescribeAccessControlListsRequest
 from aliyunsdkvpc.request.v20160428.DescribeEipAddressesRequest import DescribeEipAddressesRequest
+from aliyunsdkalidns.request.v20150109.DescribeDomainsRequest import DescribeDomainsRequest
+from aliyunsdkalidns.request.v20150109.DescribeDomainRecordsRequest import DescribeDomainRecordsRequest
+
 from aliyunsdkcore.request import RpcRequest
 
 
@@ -92,3 +95,43 @@ class AliCloud():
                 yield eip
             total_counts = response['TotalCount']
             page_num += 1
+
+    def dns_get_domains(self):
+        """
+        refer to https://next.api.aliyun.com/api/Alidns/2015-01-09/DescribeDomains?sdkStyle=old&tab=DOC&lang=PYTHON
+        :return:
+        """
+        request = DescribeDomainsRequest()
+        request.set_PageSize(100)
+        page_number = 1
+        dns_counts = 0
+        total_counts = 100
+        while dns_counts < total_counts:
+            request.set_PageNumber(page_number)
+            response = self.do_request(request)
+            for domain in response['Domains']['Domain']:
+                dns_counts += 1
+                yield domain
+            total_counts = response['TotalCount']
+            page_number += 1
+
+    def dns_get_domainrecord_by_domain(self, domain):
+        """
+        refer to https://next.api.aliyun.com/api/Alidns/2015-01-09/DescribeDomainRecords?sdkStyle=old&tab=DOC&lang=PYTHON
+        :return:
+        """
+        request = DescribeDomainRecordsRequest()
+        request.set_DomainName(domain)
+        request.set_PageSize(100)
+        page_number = 1
+        dns_counts = 0
+        total_counts = 100
+        while dns_counts < total_counts:
+            request.set_PageNumber(page_number)
+            response = self.do_request(request)
+            for domain_record in response['DomainRecords']['Record']:
+                dns_counts += 1
+                yield domain_record
+            total_counts = response['TotalCount']
+            page_number += 1
+

@@ -1,11 +1,20 @@
 from Clouds.AliCloud import AliCloud
 
+
 if __name__ == '__main__':
     from secrets import access_key, secret_key
     ali = AliCloud(access_key, secret_key, 'cn-beijing')
     slbs = [slb for slb in ali.slb_get_instances()]
     eip_with_slb = {eip['InstanceId']: eip for eip in ali.eip_get_eips() if eip['InstanceType'] == "SlbInstance"}
     acls = {acl['AclId']: acl for acl in ali.slb_get_acls()}
+    dns_records = {}
+    for domain in ali.dns_get_domains():
+        for domain_record in ali.dns_get_domainrecord_by_domain(domain['PunyCode']):
+            if dns_records.get(domain_record['Value']) is None:
+                dns_records[domain_record['Value']] = []
+            dns_records[domain_record['Value']].append(".".join([domain_record['RR'],
+                                                                 domain_record['DomainName']]))
+
     listeners = []
     for slb in slbs:
         for lsn in ali.slb_get_listeners_by_loadbalance(slb['LoadBalancerId']):
@@ -24,6 +33,7 @@ if __name__ == '__main__':
                 'AclType': lsn.get('AclType'),
                 "Bandwidth": slb['Bandwidth'],
                 "PayType": slb['PayType'],
+                "DomainName": "|".join(dns_records[public_ip]) if dns_records.get(public_ip) else ""
             }
             listeners.append(listener)
     import csv
