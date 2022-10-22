@@ -8,6 +8,8 @@ from aliyunsdkslb.request.v20140515.DescribeAccessControlListsRequest import Des
 from aliyunsdkvpc.request.v20160428.DescribeEipAddressesRequest import DescribeEipAddressesRequest
 from aliyunsdkalidns.request.v20150109.DescribeDomainsRequest import DescribeDomainsRequest
 from aliyunsdkalidns.request.v20150109.DescribeDomainRecordsRequest import DescribeDomainRecordsRequest
+from aliyunsdkslb.request.v20140515.DescribeVServerGroupAttributeRequest import DescribeVServerGroupAttributeRequest
+from aliyunsdkecs.request.v20140526.DescribeInstancesRequest import DescribeInstancesRequest
 
 from aliyunsdkcore.request import RpcRequest
 
@@ -65,7 +67,7 @@ class AliCloud():
         """
         request = DescribeAccessControlListsRequest()
         request.set_PageSize(100)
-        page_num = 0
+        page_num = 1
         total_counts = 100
         acl_counts = 0
         while acl_counts < total_counts:
@@ -76,6 +78,18 @@ class AliCloud():
                 yield acl
             total_counts = response['TotalCount']
             page_num += 1
+
+    def slb_get_vservergroup(self, vservergroup_id):
+        """
+        refer to https://next.api.aliyun.com/api/Slb/2014-05-15/DescribeVServerGroupAttribute?sdkStyle=old&tab=DEMO&lang=PYTHON
+        :param loadbalance_id:
+        :return:
+        """
+        request = DescribeVServerGroupAttributeRequest()
+        request.set_VServerGroupId(vservergroup_id)
+        for instance in self.do_request(request)['BackendServers']['BackendServer']:
+            yield  instance
+
 
     def eip_get_eips(self):
         """
@@ -135,3 +149,22 @@ class AliCloud():
             total_counts = response['TotalCount']
             page_number += 1
 
+    def ecs_get_instances(self):
+        """
+        refer to https://next.api.aliyun.com/api/Ecs/2014-05-26/DescribeInstances?sdkStyle=old
+        :return:
+        """
+        request = DescribeInstancesRequest()
+        request.set_PageSize(100)
+        page_number = 1
+        total_counts = 100
+        instance_counts = 0
+        while instance_counts < total_counts:
+            request.set_PageNumber(page_number)
+            response = self.do_request(request)
+            for instance in response['Instances']['Instance']:
+                instance_counts += 1
+                yield instance
+            page_number += 1
+            total_counts = response['TotalCount']
+        return
